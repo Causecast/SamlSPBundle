@@ -7,6 +7,8 @@ use Symfony\Component\Config\Definition\Builder\NodeDefinition;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\DependencyInjection\DefinitionDecorator;
 use Symfony\Component\DependencyInjection\Reference;
+use Symfony\Component\Yaml\Yaml;
+use CIP\Bundles\Core\CommonBundle\Model\Constant\PHPEnv\PHPEnv;
 
 
 class SamlSpFactory extends AbstractFactory
@@ -141,6 +143,9 @@ class SamlSpFactory extends AbstractFactory
         $collection = new DefinitionDecorator('aerial_ship_saml_sp.service_info_collection');
         $container->setDefinition("aerial_ship_saml_sp.service_info_collection.{$id}", $collection);
 
+        // Add SSO config settings for clusters that have SSO enabled
+        $config['services'] += $this->createServices();
+
         foreach ($config['services'] as $name => $asConfig) {
             $this->createSPSigningProvider($container, $id, $name, $asConfig['sp']['signing']);
             $this->createSPEntityDescriptorBuilder($container, $id, $name, $asConfig['sp']['config'], $config['check_path'], $config['logout_path']);
@@ -160,6 +165,66 @@ class SamlSpFactory extends AbstractFactory
 
             $collection->addMethodCall('add', array(new Reference("aerial_ship_saml_sp.service_info.{$id}.{$name}")));
         }
+    }
+
+    protected function createServices()
+    {
+        $services = array();
+
+        if(strcasecmp(PHP_SAPI,PHPEnv::$EnvironmentPhpCli)=== 0)
+        {
+            return $services;
+        }
+
+        $services = array();
+        // load db configuration, NOTE: This is a hack!
+        $documentRoot = str_replace('web', '', $_SERVER['DOCUMENT_ROOT']);
+        $file = file_get_contents($documentRoot.'/app/config/parameters.yml');
+        $configParams = Yaml::parse($file);
+
+        $mysqli = new \mysqli($configParams['parameters']['database_host'],
+                              $configParams['parameters']['database_user'],
+                              $configParams['parameters']['database_password'],
+                              $configParams['parameters']['database_name']);
+
+        // check connection
+        if ($mysqli->connect_errno) {
+            error_log($mysqli->connect_error);
+            return $services;
+        }
+
+        $sql = "SELECT c.url_host_prefix, s.saml_idp_metadata, s.saml_entity_id, s.saml_base_url,s.want_assertions_signed
+                    FROM cluster c
+                    INNER JOIN sso s
+                    ON c.sso_id = s.id
+                    WHERE c.sso_active = true";
+
+        $result = $mysqli->query($sql);
+
+        while ($cluster = $result->fetch_array()) {
+            $services += array($cluster['url_host_prefix'] =>
+                            array('idp' =>
+                                array('id' => 'cipsso_idp'),
+                                    'sp' =>
+                                        array('config' =>
+                                            array('entity_id' => $cluster['saml_entity_id'],
+                                                  'base_url' => $cluster['saml_base_url'],
+                                                  'want_assertions_signed' => (bool)$cluster['want_assertions_signed']),
+                                                  'signing' => array(),
+                                                  'meta' =>
+                                                      array('name_id_format' => 'persistent',
+                                                          'binding' => array(
+                                                              'authn_request' => 'redirect',
+                                                              'logout_request' => 'redirect'
+                                                              )
+                                                          )
+                         ) ) );
+        }
+
+        $result->close();
+
+        return $services;
+
     }
 
     protected function createSPSigningProvider(ContainerBuilder $container, $id, $name, array $config)
@@ -421,4 +486,4 @@ class SamlSpFactory extends AbstractFactory
     }
 
 
-} 
+}
