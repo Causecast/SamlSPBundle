@@ -201,6 +201,8 @@ class SamlSpFactory extends AbstractFactory
 
         $result = $mysqli->query($sql);
 
+        if(!$result) return $services;
+
         while ($cluster = $result->fetch_array()) {
             $services += array($cluster['url_host_prefix'] =>
                             array('idp' =>
