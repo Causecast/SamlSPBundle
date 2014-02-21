@@ -212,7 +212,7 @@ class SamlSpFactory extends AbstractFactory
                                             array('entity_id' => $cluster['saml_entity_id'],
                                                   'base_url' => $cluster['saml_base_url'],
                                                   'want_assertions_signed' => (bool)$cluster['want_assertions_signed']),
-                                                  'signing' => array(),
+                                                  'signing' => ((bool)$cluster['want_assertions_signed']) ? array('id' => 'cipsso_signing') : array(),
                                                   'meta' =>
                                                       array('name_id_format' => 'persistent',
                                                           'binding' => array(
@@ -233,7 +233,10 @@ class SamlSpFactory extends AbstractFactory
     {
         $serviceID = "aerial_ship_saml_sp.sp_signing.{$id}.{$name}";
         if (isset($config['id'])) {
-            $container->setAlias($serviceID, $config['sp']['signing']['sp']);
+             // I belive this is a bug, the signing service id is accessed like this: $config['id']
+            $container->setAlias($serviceID, $config['id']);
+            // NOT like this
+            // $container->setAlias($serviceID, $config['sp']['signing']['sp']);
         } else if (isset($config['cert_file']) &&
                 isset($config['key_file']) &&
                 isset($config['key_pass'])
