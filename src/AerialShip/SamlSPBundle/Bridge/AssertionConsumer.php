@@ -140,14 +140,16 @@ class AssertionConsumer implements RelyingPartyInterface
     }
 
     protected function validateState(Response $response) {
-        $requestState = $this->requestStore->get($response->getInResponseTo());
-        if (!$requestState) {
-            throw new \RuntimeException('Got response to a request that was not made');
+        if ($response->getInResponseTo()) {
+            $requestState = $this->requestStore->get($response->getInResponseTo());
+            if (!$requestState) {
+                throw new \RuntimeException('Got response to a request that was not made');
+            }
+            if ($requestState->getDestination() != $response->getIssuer()) {
+                throw new \RuntimeException('Got response from different issuer');
+            }
+            $this->requestStore->remove($requestState);
         }
-        if ($requestState->getDestination() != $response->getIssuer()) {
-            throw new \RuntimeException('Got response from different issuer');
-        }
-        $this->requestStore->remove($requestState);
     }
 
     protected function validateStatus(Response $response) {
@@ -164,10 +166,8 @@ class AssertionConsumer implements RelyingPartyInterface
     protected function validateResponseSignature(ServiceInfo $metaProvider, Response $response) {
         /** @var  $signature SignatureXmlValidator */
         if ($signature = $response->getSignature()) {
-            $key = $this->getSigningKey($metaProvider);
-            if ($key) {
-                $signature->validate($key);
-            }
+            $keys = $this->getAllKeys($metaProvider);
+            $signature->validateMulti($keys);
         }
     }
 
@@ -182,10 +182,8 @@ class AssertionConsumer implements RelyingPartyInterface
     {
         /** @var  $signature SignatureXmlValidator */
         if ($signature = $assertion->getSignature()) {
-            $key = $this->getSigningKey($serviceInfo);
-            if ($key) {
-                $signature->validate($key);
-            }
+            $keys = $this->getAllKeys($serviceInfo);
+            $signature->validateMulti($keys);
         }
     }
 
@@ -225,6 +223,29 @@ class AssertionConsumer implements RelyingPartyInterface
         }
     }
 
+
+    /**
+     * @param ServiceInfo $metaProvider
+     * @return \XMLSecurityKey[]
+     */
+    protected function getAllKeys(ServiceInfo $metaProvider)
+    {
+        $result = array();
+        $edIDP = $metaProvider->getIdpProvider()->getEntityDescriptor();
+        if ($edIDP) {
+            $arr = $edIDP->getAllIdpSsoDescriptors();
+            if ($arr) {
+                $idp = $arr[0];
+                $keyDescriptors = $idp->getKeyDescriptors('signing');
+                foreach ($keyDescriptors as $keyDescriptor) {
+                    $certificate = $keyDescriptor->getCertificate();
+                    $result[] = KeyHelper::createPublicKey($certificate);
+                }
+            }
+        }
+
+        return $result;
+    }
 
     /**
      * @param \AerialShip\SamlSPBundle\Config\ServiceInfo $metaProvider
