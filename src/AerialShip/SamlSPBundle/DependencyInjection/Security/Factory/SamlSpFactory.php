@@ -87,6 +87,11 @@ class SamlSpFactory extends AbstractFactory
                                                     ->defaultValue('redirect')
                                                     ->cannotBeEmpty()
                                                 ->end()
+                                                ->enumNode('response')
+                                                    ->values(array('redirect', 'post'))
+                                                    ->defaultValue('post')
+                                                    ->cannotBeEmpty()
+                                                ->end()
                                                 ->enumNode('logout_request')
                                                     ->values(array('redirect', 'post'))
                                                     ->defaultValue('redirect')
@@ -234,10 +239,7 @@ class SamlSpFactory extends AbstractFactory
     {
         $serviceID = "aerial_ship_saml_sp.sp_signing.{$id}.{$name}";
         if (isset($config['id'])) {
-             // I belive this is a bug, the signing service id is accessed like this: $config['id']
             $container->setAlias($serviceID, $config['id']);
-            // NOT like this
-            // $container->setAlias($serviceID, $config['sp']['signing']['sp']);
         } else if (isset($config['cert_file']) &&
                 isset($config['key_file']) &&
                 isset($config['key_pass'])
