@@ -198,7 +198,8 @@ class SamlSpFactory extends AbstractFactory
                     FROM cluster c
                     INNER JOIN sso s
                     ON c.sso_id = s.id
-                    WHERE c.sso_active = true";
+                    WHERE c.sso_active = true
+                    AND s.type = 'saml'";
 
         $result = $mysqli->query($sql);
 
@@ -225,6 +226,8 @@ class SamlSpFactory extends AbstractFactory
         }
 
         $result->close();
+
+        
 
         return $services;
 
