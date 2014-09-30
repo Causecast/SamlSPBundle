@@ -2,7 +2,6 @@
 
 namespace AerialShip\SamlSPBundle\Bridge;
 
-use AerialShip\LightSaml\Helper;
 use AerialShip\LightSaml\Meta\SerializationContext;
 use AerialShip\LightSaml\Model\Metadata\KeyDescriptor;
 use AerialShip\LightSaml\Model\Metadata\Service\SingleLogoutService;
@@ -76,7 +75,6 @@ class LogoutReceiveRequest extends LogoutBase implements RelyingPartyInterface
         $this->deleteSSOState($arrStates);
 
         $logoutResponse = new LogoutResponse();
-        $logoutResponse->setID(Helper::generateID());
         $logoutResponse->setIssuer($serviceInfo->getSpProvider()->getEntityDescriptor()->getEntityID());
         $logoutResponse->setInResponseTo($logoutRequest->getID());
 
@@ -93,7 +91,7 @@ class LogoutReceiveRequest extends LogoutBase implements RelyingPartyInterface
         $logoutResponse->getXml($context->getDocument(), $context);
         $xml = $context->getDocument()->saveXML();
 
-        return new Response($xml, 200, array('Content-Type' => 'application/xml'));
+        return new Response($xml, 200, array('Content-Type', 'application/xml'));
     }
 
 

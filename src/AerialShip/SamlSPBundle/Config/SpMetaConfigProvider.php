@@ -24,9 +24,6 @@ class SpMetaConfigProvider implements SpMetaProviderInterface
         if (!isset($config['binding']['authn_request'])) {
             $config['binding']['authn_request'] = Bindings::SAML2_HTTP_POST;
         }
-        if (!isset($config['binding']['response'])) {
-            $config['binding']['response'] = Bindings::SAML2_HTTP_POST;
-        }
         if (!isset($config['binding']['logout_request'])) {
             $config['binding']['logout_request'] = Bindings::SAML2_HTTP_POST;
         }
@@ -34,7 +31,6 @@ class SpMetaConfigProvider implements SpMetaProviderInterface
         $this->spMeta = new SpMeta();
         $this->spMeta->setNameIdFormat($this->resolveNameIDFormat($config['name_id_format']));
         $this->spMeta->setAuthnRequestBinding($this->resolveBinding($config['binding']['authn_request']));
-        $this->spMeta->setResponseBinding($this->resolveBinding($config['binding']['response']));
         $this->spMeta->setLogoutRequestBinding($this->resolveBinding($config['binding']['logout_request']));
     }
 

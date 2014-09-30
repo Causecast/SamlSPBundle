@@ -2,7 +2,6 @@
 
 namespace AerialShip\SamlSPBundle\Bridge;
 
-use AerialShip\LightSaml\Bindings;
 use AerialShip\LightSaml\Model\Assertion\Assertion;
 use AerialShip\LightSaml\Model\Protocol\Response;
 use AerialShip\LightSaml\Model\XmlDSig\SignatureXmlValidator;
@@ -72,8 +71,7 @@ class AssertionConsumer implements RelyingPartyInterface
         $response = $this->getSamlResponse($request);
         $serviceInfo = $this->serviceInfoCollection->findByIDPEntityID($response->getIssuer());
 
-        $serviceInfo->getSpProvider()->setRequest($request);
-        $this->validateResponse($serviceInfo, $response);
+        $this->validateResponse($serviceInfo, $response, $request);
 
         $assertion = $this->getSingleAssertion($response);
 
@@ -89,12 +87,8 @@ class AssertionConsumer implements RelyingPartyInterface
 
     protected function getSamlResponse(Request $request)
     {
-        $bindingType = null;
         /** @var Response $response */
-        $response = $this->bindingManager->receive($request, $bindingType);
-        if ($bindingType == Bindings::SAML2_HTTP_REDIRECT) {
-            throw new \RuntimeException('SAML protocol response cannot be sent via binding HTTP REDIRECT');
-        }
+        $response = $this->bindingManager->receive($request);
         if (!$response instanceof Response) {
             throw new \RuntimeException('Expected Protocol/Response type but got '.($response ? get_class($response) : 'nothing'));
         }
@@ -169,10 +163,10 @@ class AssertionConsumer implements RelyingPartyInterface
         }
     }
 
-    protected function validateResponseSignature(ServiceInfo $serviceInfo, Response $response) {
+    protected function validateResponseSignature(ServiceInfo $metaProvider, Response $response) {
         /** @var  $signature SignatureXmlValidator */
         if ($signature = $response->getSignature()) {
-            $keys = $this->getAllKeys($serviceInfo);
+            $keys = $this->getAllKeys($metaProvider);
             $signature->validateMulti($keys);
         }
     }
@@ -182,7 +176,6 @@ class AssertionConsumer implements RelyingPartyInterface
         $this->validateAssertionSignature($assertion, $serviceInfo);
         $this->validateAssertionTime($assertion);
         $this->validateAssertionSubjectTime($assertion);
-        $this->validateSubjectConfirmationRecipient($assertion, $serviceInfo);
     }
 
     protected function validateAssertionSignature(Assertion $assertion, ServiceInfo $serviceInfo)
@@ -191,8 +184,6 @@ class AssertionConsumer implements RelyingPartyInterface
         if ($signature = $assertion->getSignature()) {
             $keys = $this->getAllKeys($serviceInfo);
             $signature->validateMulti($keys);
-        } else {
-            throw new AuthenticationException('Assertion must be signed');
         }
     }
 
@@ -232,30 +223,6 @@ class AssertionConsumer implements RelyingPartyInterface
         }
     }
 
-
-    protected function validateSubjectConfirmationRecipient(Assertion $assertion, ServiceInfo $serviceInfo)
-    {
-        $arrACS = $serviceInfo->getSpProvider()
-                ->getEntityDescriptor()
-                ->getFirstSpSsoDescriptor()
-                ->findAssertionConsumerServices();
-        foreach ($assertion->getSubject()->getSubjectConfirmations() as $subjectConfirmation) {
-            $ok = false;
-            foreach ($arrACS as $acs) {
-                if ($acs->getLocation() == $subjectConfirmation->getData()->getRecipient()) {
-                    $ok = true;
-                    break;
-                }
-            }
-            if (!$ok) {
-                throw new AuthenticationException(
-                    sprintf('Invalid Assertion SubjectConfirmation Recipient %s',
-                        $subjectConfirmation->getData()->getRecipient()
-                    )
-                );
-            }
-        }
-    }
 
     /**
      * @param ServiceInfo $metaProvider

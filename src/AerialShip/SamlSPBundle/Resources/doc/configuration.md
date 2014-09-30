@@ -28,8 +28,6 @@ security.xml
 
                                 # or use builtin EntityDescriptorFileProvider with specific file
                                 file: "@AerialShipSamlTestBundle/Resources/azure-FederationMetadata.xml"
-                                # in case of EntitiesDescriptor entity_id of the EntityDescriptor to use
-                                entity_id: https://some.com/entity_id
                             sp:
                                 config:
                                     # required
@@ -55,9 +53,8 @@ security.xml
                                     name_id_format: persistent
                                     binding:
                                         # any saml binding or shortcuts: post or redirect
-                                        authn_request: redirect
-                                        response: post
-                                        logout_request: redirect
+                                        authn_request: post
+                                        logout_request: post
                 # required for saml logout, set the same path to local_logout_path
                 logout:
                     path: /logout
