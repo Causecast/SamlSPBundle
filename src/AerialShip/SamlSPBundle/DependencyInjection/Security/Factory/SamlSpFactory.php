@@ -7,6 +7,7 @@ use Symfony\Component\Config\Definition\Builder\NodeDefinition;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\DependencyInjection\DefinitionDecorator;
 use Symfony\Component\DependencyInjection\Reference;
+use Symfony\Component\Yaml\Yaml;
 use CIP\Bundles\Core\CommonBundle\Model\Constant\PHPEnv\PHPEnv;
 
 class SamlSpFactory extends AbstractFactory
