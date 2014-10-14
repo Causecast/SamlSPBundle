@@ -44,64 +44,64 @@ class SamlSpFactory extends AbstractFactory
             ->scalarNode('local_logout_path')->defaultValue('/logout')->cannotBeEmpty()->end()
             ->booleanNode('create_user_if_not_exists')->defaultFalse()->end()
             ->arrayNode('services')
-                ->isRequired()
-                ->requiresAtLeastOneElement()
-                ->prototype('array')
-                    ->children()
-                        ->arrayNode('idp')->isRequired()
-                            ->children()
-                                ->scalarNode('file')->end()
-                                ->scalarNode('entity_id')->end()
-                                ->scalarNode('id')->end()
-                            ->end()
-                        ->end()
-                        ->arrayNode('sp')->addDefaultsIfNotSet()
-                            ->children()
-                                ->arrayNode('config')->addDefaultsIfNotSet()
-                                    ->children()
-                                        ->scalarNode('entity_id')->cannotBeEmpty()->isRequired()->end()
-                                        ->scalarNode('base_url')->defaultValue(null)->end()
-                                        ->booleanNode('want_assertions_signed')->cannotBeEmpty()->defaultFalse()->end()
-                                    ->end()
-                                ->end()
-                                ->arrayNode('signing')->addDefaultsIfNotSet()
-                                    ->children()
-                                        ->scalarNode('id')->cannotBeEmpty()->end()
-                                        ->scalarNode('cert_file')->cannotBeEmpty()->end()
-                                        ->scalarNode('key_file')->cannotBeEmpty()->end()
-                                        ->scalarNode('key_pass')->end()
-                                    ->end()
-                                ->end()
-                                ->arrayNode('meta')->addDefaultsIfNotSet()
-                                    ->children()
-                                        ->scalarNode('id')->end()
-                                        ->enumNode('name_id_format')
-                                            ->values(array('persistent', 'transient'))
-                                            ->cannotBeEmpty()
-                                            ->defaultValue('persistent')
-                                        ->end()
-                                        ->arrayNode('binding')->addDefaultsIfNotSet()
-                                            ->children()
-                                                ->enumNode('authn_request')
-                                                    ->values(array('redirect', 'post'))
-                                                    ->defaultValue('redirect')
-                                                    ->cannotBeEmpty()
-                                                ->end()
-                                                ->enumNode('logout_request')
-                                                    ->values(array('redirect', 'post'))
-                                                    ->defaultValue('redirect')
-                                                    ->cannotBeEmpty()
-                                                ->end()
-                                            ->end()
-                                        ->end()
-                                    ->end()
-                                ->end()
-                            ->end()
-                        ->end()
-                    ->end()
-                ->end()
+            ->isRequired()
+            ->requiresAtLeastOneElement()
+            ->prototype('array')
+            ->children()
+            ->arrayNode('idp')->isRequired()
+            ->children()
+            ->scalarNode('file')->end()
+            ->scalarNode('entity_id')->end()
+            ->scalarNode('id')->end()
             ->end()
-        ->end();
+            ->end()
+            ->arrayNode('sp')->addDefaultsIfNotSet()
+            ->children()
+            ->arrayNode('config')->addDefaultsIfNotSet()
+            ->children()
+            ->scalarNode('entity_id')->cannotBeEmpty()->isRequired()->end()
+            ->scalarNode('base_url')->defaultValue(null)->end()
+            ->booleanNode('want_assertions_signed')->cannotBeEmpty()->defaultFalse()->end()
+            ->end()
+            ->end()
+            ->arrayNode('signing')->addDefaultsIfNotSet()
+            ->children()
+            ->scalarNode('id')->cannotBeEmpty()->end()
+            ->scalarNode('cert_file')->cannotBeEmpty()->end()
+            ->scalarNode('key_file')->cannotBeEmpty()->end()
+            ->scalarNode('key_pass')->end()
+            ->end()
+            ->end()
+            ->arrayNode('meta')->addDefaultsIfNotSet()
+            ->children()
+            ->scalarNode('id')->end()
+            ->enumNode('name_id_format')
+            ->values(array('persistent', 'transient'))
+            ->cannotBeEmpty()
+            ->defaultValue('persistent')
+            ->end()
+            ->arrayNode('binding')->addDefaultsIfNotSet()
+            ->children()
+            ->enumNode('authn_request')
+            ->values(array('redirect', 'post'))
+            ->defaultValue('redirect')
+            ->cannotBeEmpty()
+            ->end()
+            ->enumNode('logout_request')
+            ->values(array('redirect', 'post'))
+            ->defaultValue('redirect')
+            ->cannotBeEmpty()
+            ->end()
+            ->end()
+            ->end()
+            ->end()
+            ->end()
+            ->end()
+            ->end()
+            ->end()
+            ->end()
+            ->end()
+            ->end();
     }
 
 
@@ -123,14 +123,14 @@ class SamlSpFactory extends AbstractFactory
 
         if ($config['relying_party']) {
             $container
-                    ->getDefinition($listenerId)
-                    ->addMethodCall('setRelyingParty', array(new Reference($config['relying_party'])))
-                ;
+                ->getDefinition($listenerId)
+                ->addMethodCall('setRelyingParty', array(new Reference($config['relying_party'])))
+            ;
         } else {
             $container
-                    ->getDefinition($listenerId)
-                    ->addMethodCall('setRelyingParty', array(new Reference('aerial_ship_saml_sp.relying_party.composite.'.$id)))
-                ;
+                ->getDefinition($listenerId)
+                ->addMethodCall('setRelyingParty', array(new Reference('aerial_ship_saml_sp.relying_party.composite.'.$id)))
+            ;
         }
 
         return $listenerId;
@@ -184,9 +184,9 @@ class SamlSpFactory extends AbstractFactory
         $configParams = Yaml::parse($file);
 
         $mysqli = new \mysqli($configParams['parameters']['database_host'],
-                              $configParams['parameters']['database_user'],
-                              $configParams['parameters']['database_password'],
-                              $configParams['parameters']['database_name']);
+            $configParams['parameters']['database_user'],
+            $configParams['parameters']['database_password'],
+            $configParams['parameters']['database_name']);
 
         // check connection
         if ($mysqli->connect_errno) {
@@ -207,27 +207,28 @@ class SamlSpFactory extends AbstractFactory
 
         while ($cluster = $result->fetch_array()) {
             $services += array($cluster['url_host_prefix'] =>
-                            array('idp' =>
-                                array('id' => 'cipsso_idp'),
-                                    'sp' =>
-                                        array('config' =>
-                                            array('entity_id' => $cluster['saml_entity_id'],
-                                                  'base_url' => $cluster['saml_base_url'],
-                                                  'want_assertions_signed' => (bool)$cluster['want_assertions_signed']),
-                                                  'signing' => ((bool)$cluster['want_assertions_signed']) ? array('id' => 'cipsso_signing') : array(),
-                                                  'meta' =>
-                                                      array('name_id_format' => 'persistent',
-                                                          'binding' => array(
-                                                              'authn_request' => 'redirect',
-                                                              'logout_request' => 'redirect'
-                                                              )
-                                                          )
-                         ) ) );
+            array('idp' =>
+            array('id' => 'cipsso_idp'),
+                'sp' =>
+                array('config' =>
+                array('entity_id' => $cluster['saml_entity_id'],
+                    'base_url' => $cluster['saml_base_url'],
+                    'want_assertions_signed' => (bool)$cluster['want_assertions_signed']),
+                    'signing' => ((bool)$cluster['want_assertions_signed']) ? array('id' => 'cipsso_signing') : array(),
+                    'key_pass'=>$configParams['parameters']['saml_private_key_password'],
+                    'meta' =>
+                    array('name_id_format' => 'persistent',
+                        'binding' => array(
+                            'authn_request' => 'redirect',
+                            'logout_request' => 'redirect'
+                        )
+                    )
+                ) ) );
         }
 
         $result->close();
 
-        
+
 
         return $services;
 
@@ -237,13 +238,13 @@ class SamlSpFactory extends AbstractFactory
     {
         $serviceID = "aerial_ship_saml_sp.sp_signing.{$id}.{$name}";
         if (isset($config['id'])) {
-             // I belive this is a bug, the signing service id is accessed like this: $config['id']
+            // I belive this is a bug, the signing service id is accessed like this: $config['id']
             $container->setAlias($serviceID, $config['id']);
             // NOT like this
             // $container->setAlias($serviceID, $config['sp']['signing']['sp']);
         } else if (isset($config['cert_file']) &&
-                isset($config['key_file']) &&
-                isset($config['key_pass'])
+            isset($config['key_file']) &&
+            isset($config['key_pass'])
         ) {
             $service = new DefinitionDecorator('aerial_ship_saml_sp.sp_signing.file');
             $service->replaceArgument(1, $config['cert_file']);
@@ -426,8 +427,8 @@ class SamlSpFactory extends AbstractFactory
     {
         $providerId = 'security.authentication.provider.aerial_ship_saml_sp.'.$id;
         $provider = $container
-                ->setDefinition($providerId, new DefinitionDecorator('security.authentication.provider.aerial_ship_saml_sp'))
-                ->replaceArgument(0, $id);
+            ->setDefinition($providerId, new DefinitionDecorator('security.authentication.provider.aerial_ship_saml_sp'))
+            ->replaceArgument(0, $id);
 
         if (isset($config['provider'])) {
             $adapter = new DefinitionDecorator('aerial_ship_saml_sp.user_provider_adapter');
@@ -436,8 +437,8 @@ class SamlSpFactory extends AbstractFactory
             $container->setDefinition($adapterID, $adapter);
 
             $provider
-                    ->replaceArgument(1, new Reference($adapterID))
-                    ->replaceArgument(2, new Reference('security.user_checker'))
+                ->replaceArgument(1, new Reference($adapterID))
+                ->replaceArgument(2, new Reference('security.user_checker'))
             ;
         }
         if (!isset($config['create_user_if_not_exists'])) {
@@ -488,10 +489,10 @@ class SamlSpFactory extends AbstractFactory
         $entryPointId = 'security.authentication.form_entry_point.'.$id;
 
         $container
-                ->setDefinition($entryPointId, new DefinitionDecorator('security.authentication.form_entry_point'))
-                ->addArgument(new Reference('security.http_utils'))
-                ->addArgument($config['login_path'])
-                ->addArgument($config['use_forward'])
+            ->setDefinition($entryPointId, new DefinitionDecorator('security.authentication.form_entry_point'))
+            ->addArgument(new Reference('security.http_utils'))
+            ->addArgument($config['login_path'])
+            ->addArgument($config['use_forward'])
         ;
 
         return $entryPointId;
