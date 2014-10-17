@@ -75,8 +75,7 @@ class SamlSpFactory extends AbstractFactory
             ->arrayNode('meta')->addDefaultsIfNotSet()
             ->children()
             ->scalarNode('id')->end()
-            ->enumNode('name_id_format')
-            ->values(array('persistent', 'transient'))
+            ->scalarNode('name_id_format')
             ->cannotBeEmpty()
             ->defaultValue('persistent')
             ->end()
@@ -217,8 +216,8 @@ class SamlSpFactory extends AbstractFactory
                     'signing' => ((bool)$cluster['want_assertions_signed']) ? array('id' => 'cipsso_signing') : array(),
                     'key_pass'=>$configParams['parameters']['saml_private_key_password'],
                     'meta' =>
-                    array('name_id_format' => 'persistent',
-                        'binding' => array(
+                    array('name_id_format' => 'urn:oasis:names:tc:SAML:1.1:nameid-format:emailAddress',
+                          'binding' => array(
                             'authn_request' => 'redirect',
                             'logout_request' => 'redirect'
                         )
