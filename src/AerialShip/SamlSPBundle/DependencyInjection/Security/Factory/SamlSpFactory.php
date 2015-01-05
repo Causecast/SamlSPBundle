@@ -171,7 +171,7 @@ class SamlSpFactory extends AbstractFactory
     {
         $services = array();
 
-        if(strcasecmp(PHP_SAPI,PHPEnv::$EnvironmentPhpCli)=== 0)
+        if(strcasecmp(PHP_SAPI,PHPEnv::ENVIRONMENT_PHP_CLI)=== 0)
         {
             return $services;
         }
