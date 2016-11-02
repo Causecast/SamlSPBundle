@@ -5,7 +5,6 @@ namespace AerialShip\SamlSPBundle\Bridge;
 use AerialShip\LightSaml\Binding\BindingDetector;
 use Symfony\Component\HttpFoundation\Request;
 
-
 class BindingManager extends BindingDetector
 {
 
@@ -51,6 +50,4 @@ class BindingManager extends BindingDetector
         $result->setRequestMethod($request->getMethod());
         return $result;
     }
-
-
 } 

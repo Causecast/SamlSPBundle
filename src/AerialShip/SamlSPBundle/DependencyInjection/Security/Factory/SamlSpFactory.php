@@ -10,7 +10,6 @@ use Symfony\Component\DependencyInjection\Reference;
 use Symfony\Component\Yaml\Yaml;
 use CIP\Bundles\Core\CommonBundle\Model\Constant\PHPEnv\PHPEnv;
 
-
 class SamlSpFactory extends AbstractFactory
 {
 
@@ -44,15 +43,67 @@ class SamlSpFactory extends AbstractFactory
             ->scalarNode('local_logout_path')->defaultValue('/logout')->cannotBeEmpty()->end()
             ->booleanNode('create_user_if_not_exists')->defaultFalse()->end()
             ->arrayNode('services')
-            ->isRequired()
-            ->requiresAtLeastOneElement()
-            ->prototype('array')
-            ->children()
-            ->arrayNode('idp')->isRequired()
-            ->children()
-            ->scalarNode('file')->end()
-            ->scalarNode('entity_id')->end()
-            ->scalarNode('id')->end()
+                ->isRequired()
+                ->requiresAtLeastOneElement()
+                ->useAttributeAsKey('name')
+                ->prototype('array')
+                    ->children()
+                        ->arrayNode('idp')->isRequired()
+                            ->children()
+                                ->scalarNode('file')->end()
+                                ->scalarNode('entity_id')->end()
+                                ->scalarNode('id')->end()
+                            ->end()
+                        ->end()
+                        ->arrayNode('sp')->addDefaultsIfNotSet()
+                            ->children()
+                                ->arrayNode('config')->addDefaultsIfNotSet()
+                                    ->children()
+                                        ->scalarNode('entity_id')->cannotBeEmpty()->isRequired()->end()
+                                        ->scalarNode('base_url')->defaultValue(null)->end()
+                                        ->booleanNode('want_assertions_signed')->cannotBeEmpty()->defaultFalse()->end()
+                                    ->end()
+                                ->end()
+                                ->arrayNode('signing')->addDefaultsIfNotSet()
+                                    ->children()
+                                        ->scalarNode('id')->cannotBeEmpty()->end()
+                                        ->scalarNode('cert_file')->end()
+                                        ->scalarNode('key_file')->end()
+                                        ->scalarNode('key_pass')->end()
+                                    ->end()
+                                ->end()
+                                ->arrayNode('meta')->addDefaultsIfNotSet()
+                                    ->children()
+                                        ->scalarNode('id')->end()
+                                        ->scalarNode('name_id_format')
+                                            ->cannotBeEmpty()
+                                            ->defaultValue('persistent')
+                                        ->end()
+                                        ->arrayNode('binding')->addDefaultsIfNotSet()
+                                            ->children()
+                                                ->enumNode('authn_request')
+                                                    ->values(array('redirect', 'post'))
+                                                    ->defaultValue('redirect')
+                                                    ->cannotBeEmpty()
+                                                ->end()
+                                                ->enumNode('response')
+                                                    ->values(array('redirect', 'post'))
+                                                    ->defaultValue('post')
+                                                    ->cannotBeEmpty()
+                                                ->end()
+                                                ->enumNode('logout_request')
+                                                    ->values(array('redirect', 'post'))
+                                                    ->defaultValue('redirect')
+                                                    ->cannotBeEmpty()
+                                                ->end()
+                                            ->end()
+                                        ->end()
+                                    ->end()
+                                ->end()
+                            ->end()
+                        ->end()
+                    ->end()
+                ->end()
             ->end()
             ->end()
             ->arrayNode('sp')->addDefaultsIfNotSet()
@@ -242,13 +293,12 @@ class SamlSpFactory extends AbstractFactory
             // NOT like this
             // $container->setAlias($serviceID, $config['sp']['signing']['sp']);
         } else if (isset($config['cert_file']) &&
-            isset($config['key_file']) &&
-            isset($config['key_pass'])
+            isset($config['key_file'])
         ) {
             $service = new DefinitionDecorator('aerial_ship_saml_sp.sp_signing.file');
             $service->replaceArgument(1, $config['cert_file']);
             $service->replaceArgument(2, $config['key_file']);
-            $service->replaceArgument(3, $config['key_pass']);
+            $service->replaceArgument(3, array_key_exists('key_pass', $config) ? $config['key_pass'] : null);
             $container->setDefinition($serviceID, $service);
         } else {
             $service = new DefinitionDecorator('aerial_ship_saml_sp.sp_signing.null');
@@ -496,6 +546,4 @@ class SamlSpFactory extends AbstractFactory
 
         return $entryPointId;
     }
-
-
 }
