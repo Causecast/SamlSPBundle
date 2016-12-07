@@ -181,10 +181,22 @@ class SamlSpFactory extends AbstractFactory
         }
 
         $services = array();
-        // load db configuration, NOTE: This is a hack!
-        $documentRoot = str_replace('web', '', $_SERVER['DOCUMENT_ROOT']);
-        $file = file_get_contents($documentRoot.'/app/config/parameters.yml');
-        $configParams = Yaml::parse($file);
+        // load db configuration, NOTE: This is a hack! (made hackier by Mike M)
+        if(isset($_SERVER['SYMFONY__DB__HOST']) && isset($_SERVER['SYMFONY__DB__USER']) && isset($_SERVER['SYMFONY__DB__PASSWORD']) && isset($_SERVER['APPLICATOIN_ENV']) && isset($_SERVER['SYMFONY__SAML__KEY__PASS'])) {
+            $configParams = [
+                    'parameters' => [
+                        'database_host' => $_SERVER['SYMFONY__DB__HOST'],
+                        'database_user' => $_SERVER['SYMFONY__DB__USER'],
+                        'database_password' => $_SERVER['SYMFONY__DB__PASSWORD'],
+                        'database_name' => $_SERVER['APPLICATOIN_ENV'],
+                        'saml_private_key_password' => $_SERVER['SYMFONY__SAML__KEY__PASS']
+                        ]
+                    ];
+        } else {
+            $documentRoot = str_replace('web', '', $_SERVER['DOCUMENT_ROOT']);
+            $file = file_get_contents($documentRoot.'/app/config/parameters.yml');
+            $configParams = Yaml::parse($file);
+        }
 
         $mysqli = new \mysqli($configParams['parameters']['database_host'],
             $configParams['parameters']['database_user'],
@@ -218,7 +230,7 @@ class SamlSpFactory extends AbstractFactory
                     'base_url' => $cluster['saml_base_url'],
                     'want_assertions_signed' => (bool)$cluster['want_assertions_signed']),
                     'signing' => ((bool)$cluster['want_assertions_signed']) ? array('id' => 'cipsso_signing') : array(),
-                    'key_pass'=>$configParams['parameters']['saml_private_key_password'],
+                    'key_pass' =>$configParams['parameters']['saml_private_key_password'],
                     'meta' =>
                     array('name_id_format' => 'urn:oasis:names:tc:SAML:1.1:nameid-format:emailAddress',
                           'binding' => array(
