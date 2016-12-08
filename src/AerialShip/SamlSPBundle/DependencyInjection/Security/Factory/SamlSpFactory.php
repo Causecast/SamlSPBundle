@@ -182,13 +182,13 @@ class SamlSpFactory extends AbstractFactory
 
         $services = array();
         // load db configuration, NOTE: This is a hack! (made hackier by Mike M)
-        if(isset($_SERVER['SYMFONY__DB__HOST']) && isset($_SERVER['SYMFONY__DB__USER']) && isset($_SERVER['SYMFONY__DB__PASSWORD']) && isset($_SERVER['APPLICATOIN_ENV']) && isset($_SERVER['SYMFONY__SAML__KEY__PASS'])) {
+        if(isset($_SERVER['SYMFONY__DB__HOST'], $_SERVER['SYMFONY__DB__USER'], $_SERVER['SYMFONY__DB__PASSWORD'], $_SERVER['APPLICATION_ENV'], $_SERVER['SYMFONY__SAML__KEY__PASS'])) {
             $configParams = [
                     'parameters' => [
                         'database_host' => $_SERVER['SYMFONY__DB__HOST'],
                         'database_user' => $_SERVER['SYMFONY__DB__USER'],
                         'database_password' => $_SERVER['SYMFONY__DB__PASSWORD'],
-                        'database_name' => $_SERVER['APPLICATOIN_ENV'],
+                        'database_name' => $_SERVER['APPLICATION_ENV'],
                         'saml_private_key_password' => $_SERVER['SYMFONY__SAML__KEY__PASS']
                         ]
                     ];
