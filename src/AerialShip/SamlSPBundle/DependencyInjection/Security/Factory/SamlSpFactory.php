@@ -246,7 +246,7 @@ class SamlSpFactory extends AbstractFactory
             // NOT like this
             // $container->setAlias($serviceID, $config['sp']['signing']['sp']);
         } else if (isset($config['cert_file']) &&
-            isset($config['key_file'])
+                isset($config['key_file'])
         ) {
             $service = new DefinitionDecorator('aerial_ship_saml_sp.sp_signing.file');
             $service->replaceArgument(1, $config['cert_file']);
@@ -429,8 +429,8 @@ class SamlSpFactory extends AbstractFactory
     {
         $providerId = 'security.authentication.provider.aerial_ship_saml_sp.'.$id;
         $provider = $container
-            ->setDefinition($providerId, new DefinitionDecorator('security.authentication.provider.aerial_ship_saml_sp'))
-            ->replaceArgument(0, $id);
+                ->setDefinition($providerId, new DefinitionDecorator('security.authentication.provider.aerial_ship_saml_sp'))
+                ->replaceArgument(0, $id);
 
         if (isset($config['provider'])) {
             $adapter = new DefinitionDecorator('aerial_ship_saml_sp.user_provider_adapter');
@@ -439,8 +439,8 @@ class SamlSpFactory extends AbstractFactory
             $container->setDefinition($adapterID, $adapter);
 
             $provider
-                ->replaceArgument(1, new Reference($adapterID))
-                ->replaceArgument(2, new Reference('security.user_checker'))
+                    ->replaceArgument(1, new Reference($adapterID))
+                    ->replaceArgument(2, new Reference('security.user_checker'))
             ;
         }
         if (!isset($config['create_user_if_not_exists'])) {
@@ -491,10 +491,10 @@ class SamlSpFactory extends AbstractFactory
         $entryPointId = 'security.authentication.form_entry_point.'.$id;
 
         $container
-            ->setDefinition($entryPointId, new DefinitionDecorator('security.authentication.form_entry_point'))
-            ->addArgument(new Reference('security.http_utils'))
-            ->addArgument($config['login_path'])
-            ->addArgument($config['use_forward'])
+                ->setDefinition($entryPointId, new DefinitionDecorator('security.authentication.form_entry_point'))
+                ->addArgument(new Reference('security.http_utils'))
+                ->addArgument($config['login_path'])
+                ->addArgument($config['use_forward'])
         ;
 
         return $entryPointId;
